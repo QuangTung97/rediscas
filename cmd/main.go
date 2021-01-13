@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"rediscas"
 	"time"
 
@@ -13,11 +14,25 @@ func main() {
 	cache := rediscas.NewCache(nil)
 
 	ctx := context.Background()
-	for {
-		err := cache.Set(ctx, client, "tung", 101, "value003")
+
+	start := time.Now()
+	for i := 0; i < 100000; i++ {
+		// err := cache.Set(ctx, client, "tung", uint32(i+1), "some long string abcdafdafdsfaf")
+		// if err != nil {
+		// 	panic(err)
+		// }
+		_, err := cache.GetLease(ctx, client, "tung")
+		if err == redis.Nil {
+			cache.Set(ctx, client, "tung", 10, "taquangtung")
+			continue
+		}
+		if err == rediscas.ErrLeasing {
+			fmt.Println("LEASING")
+			continue
+		}
 		if err != nil {
 			panic(err)
 		}
-		time.Sleep(3 * time.Second)
 	}
+	fmt.Println(time.Since(start))
 }
